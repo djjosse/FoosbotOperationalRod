@@ -23,6 +23,9 @@ ServoWrapper * _servoWrapper;
 //Pointer to input handler instance
 InputHandler * _inputHandler;
 
+void initI();
+bool _isInitialized;
+
 //Encoder A interrupt handler function
 void handleEncoderA()
 {
@@ -38,8 +41,12 @@ void handleEncoderB()
 //Arduino Setup Function
 void setup() {
 	//start serial communication
-	Serial.begin(9600);
+	Serial.begin(9600);	
+	_isInitialized = false;
+}
 
+void initI()
+{
 	//create used objects
 	_dcMotor = new DcMotor();
 	_servoWrapper = new ServoWrapper();
@@ -52,18 +59,40 @@ void setup() {
 	//attach interrupts for encoders (0 - pin 2, 1 - pin 3)
 	pinMode(_dcMotor->ENCODER_A, INPUT);
 	pinMode(_dcMotor->ENCODER_B, INPUT);
+
 	attachInterrupt(0, handleEncoderA, CHANGE);
 	attachInterrupt(1, handleEncoderB, CHANGE);
+	_isInitialized = true;
 }
 
 //Arduino loop function
 void loop() {
-	//callibrate rod - only if not callibrated yet
-	_dcMotor->callibrate();
-	
-	//handle input from serial port
-	_inputHandler->handleInput();
 
-	//verify DC motor location and fix
-	_dcMotor->verifyPosition();
+	if (!_isInitialized)
+	{
+		Serial.println("Need initialization!");
+		if (_inputHandler->handleInput())
+		{
+			initI();
+		}
+	}
+	else
+	{
+		//callibrate rod - only if not callibrated yet
+		_dcMotor->callibrate();
+
+		//handle input from serial port
+		if (_inputHandler->handleInput())
+		{
+			initI();
+		}
+		else
+		{
+			if (_isInitialized)
+			{
+				//verify DC motor location and fix
+				_dcMotor->verifyPosition();
+			}
+		}
+	}
 }

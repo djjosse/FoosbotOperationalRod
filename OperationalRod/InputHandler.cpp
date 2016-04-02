@@ -22,7 +22,7 @@ InputHandler::InputHandler(DcMotor * dcMotor, ServoWrapper * servoWrapper)
 	_servoWrapper = servoWrapper;
 }
 
-void InputHandler::handleInput()
+bool InputHandler::handleInput()
 {
 	if (Serial.available() > 0)
 	{
@@ -32,30 +32,41 @@ void InputHandler::handleInput()
 		char input[INPUT_SIZE + 1];
 		byte size = Serial.readBytes(input, INPUT_SIZE);
 		input[size] = 0;
-		int count = 0;
-		char* command = strtok(input, "&");
-		while (command != 0)
+		Serial.println(input);
+		if (input[0] == 'i')
 		{
-			if (count == 0)
+			//requested reset
+			return true;
+		}
+		else
+		{
+			int count = 0;
+			char* command = strtok(input, "&");
+			while (command != 0)
 			{
-				dc = atoi(command);	
+				if (count == 0)
+				{
+					dc = atoi(command);
+				}
+				if (count == 1)
+				{
+					servo = atoi(command);
+				}
+				command = strtok(0, "&");
+				count++;
 			}
-			if (count == 1)
-			{			
-				servo = atoi(command);
+			if (dc != -1)
+			{
+				Serial.println(dc);
+				_dcMotor->setPosition(dc);
 			}
-			command = strtok(0, "&");
-			count++;
-		}
-		if (dc != -1)
-		{
-			Serial.println(dc);
-			_dcMotor->setPosition(dc);
-		}
-		if (servo!=0)
-		{
-			Serial.println(servo);
-			_servoWrapper->setState(servo);
+			if (servo != 0)
+			{
+				Serial.println(servo);
+				_servoWrapper->setState(servo);
+			}
 		}
 	}
+	//reset not requested
+	return false;
 }

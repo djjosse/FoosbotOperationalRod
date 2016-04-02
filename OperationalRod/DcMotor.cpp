@@ -18,21 +18,27 @@
 
 DcMotor::DcMotor()
 {
+	//initialize current position and desired position for PID
 	_currentPosition = 0;
 	_setpoint = 0;
+
+	//create pid instance and configure it
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
 	_pid->SetSampleTime(1);
+	
+	//set callibration flag to false
 	_isCallibrated = false;
 }
 
 void DcMotor::encoderA(){
 
-	// look for a low-to-high on channel A
-	if (digitalRead(ENCODER_A) == HIGH) {
-
+	//look for a low-to-high on channel A
+	if (digitalRead(ENCODER_A) == HIGH) 
+	{
 		// check channel B to see which way encoder is turning
-		if (digitalRead(ENCODER_B) == LOW) {
+		if (digitalRead(ENCODER_B) == LOW)
+		{
 			//CW
 			_currentPosition--;
 		}
@@ -57,30 +63,31 @@ void DcMotor::encoderA(){
 	}
 }
 
-void DcMotor::encoderB(){
-
-	// look for a low-to-high on channel B
+void DcMotor::encoderB()
+{
+	//look for a low-to-high on channel B
 	if (digitalRead(ENCODER_B) == HIGH) {
 
 		// check channel A to see which way encoder is turning
 		if (digitalRead(ENCODER_A) == HIGH) {
-			// CW
+			//moving clock wise
 			_currentPosition--;
 		}
 		else {
-			// CCW
+			//moving contra clock wise
 			_currentPosition++;
 		}
 	}
-	// Look for a high-to-low on channel B
-	else {
+	//look for a high-to-low on channel B
+	else
+	{
 		// check channel B to see which way encoder is turning  
 		if (digitalRead(ENCODER_A) == LOW) {
-			// CW
+			//moving clock wise
 			_currentPosition--;
 		}
 		else {
-			// CCW
+			//moving contra clock wise
 			_currentPosition++;
 		}
 	}
@@ -130,7 +137,7 @@ void DcMotor::setPosition(int newPosition)
 	{
 		setSpeed(0);
 	}
-	Serial.println(getCurrentDcPosition());
+	//Serial.println(getCurrentDcPosition());
 }
 
 void DcMotor::verifyPosition()
@@ -153,11 +160,11 @@ void DcMotor::callibrate()
 		_startPosition = _currentPosition;
 		_setpoint = _startPosition;
 
-		Serial.print(getCurrentDcPosition());
+		/*Serial.print(getCurrentDcPosition());
 		Serial.print(" ");
 		Serial.print(_startPosition);
 		Serial.print(" ");
-		Serial.println(_setpoint);
+		Serial.println(_setpoint);*/
 
 		
 		_isCallibrated = true;

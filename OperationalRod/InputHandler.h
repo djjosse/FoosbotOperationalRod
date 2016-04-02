@@ -34,7 +34,8 @@ class InputHandler
 		
 		//handles input form serial port
 		//must be called each arduino loop iteration
-		void handleInput();
+		//returns flag if reset requested - true
+		bool handleInput();
 };
 
 
