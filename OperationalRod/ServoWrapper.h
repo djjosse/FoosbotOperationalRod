@@ -42,6 +42,8 @@ public:
 
 	//callibration method sets servo to defence mode
 	void callibrate();
+
+	void setCalibratedFalse() { _isCallibrated = false; }
 };
 
 #endif

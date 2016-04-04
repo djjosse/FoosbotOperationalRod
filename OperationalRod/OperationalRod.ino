@@ -42,6 +42,7 @@ void handleEncoderB()
 void setup() {
 	//start serial communication
 	Serial.begin(9600);	
+	_servoWrapper = new ServoWrapper();
 	_isInitialized = false;
 }
 
@@ -49,8 +50,10 @@ void initI()
 {
 	//create used objects
 	_dcMotor = new DcMotor();
-	_servoWrapper = new ServoWrapper();
 	_inputHandler = new InputHandler(_dcMotor, _servoWrapper);
+
+	_servoWrapper->setCalibratedFalse();
+	_servoWrapper->callibrate();
 
 	//attached stopper buttons for rod
 	pinMode(_dcMotor->START_BUTTON, INPUT);
