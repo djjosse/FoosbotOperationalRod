@@ -25,6 +25,7 @@ DcMotor::DcMotor()
 	//create pid instance and configure it
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
+	_pid->SetOutputLimits(-255, 255);
 	_pid->SetSampleTime(1);
 	
 	//set callibration flag to false
@@ -133,7 +134,7 @@ void DcMotor::setPosition(int newPosition)
 		if (digitalRead(START_BUTTON) != LOW)
 		{
 			setBackward();
-			setSpeed(100);
+			setSpeed(_output*(-1));
 		}
 		else
 		{
