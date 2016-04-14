@@ -36,7 +36,7 @@ void ServoWrapper::setState(int state)
 		}
 		else if (state == 3)
 		{
-			_servo.write(150);
+			_servo.write(120);
 			_servoState = state;
 		}
 	}

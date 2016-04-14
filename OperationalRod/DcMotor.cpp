@@ -123,13 +123,21 @@ void DcMotor::setPosition(int newPosition)
 			setForward();
 			setSpeed(_output);
 		}
+		else
+		{
+			setSpeed(0);
+		}
 	}
 	else if (_setpoint  < _currentPosition - PID_ERROR)
 	{
 		if (digitalRead(START_BUTTON) != LOW)
 		{
 			setBackward();
-			setSpeed(255);
+			setSpeed(100);
+		}
+		else
+		{
+			setSpeed(0);
 		}
 	}
 	//Position reached
