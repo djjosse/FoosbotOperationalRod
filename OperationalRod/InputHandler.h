@@ -24,6 +24,7 @@
 class InputHandler
 {
 	private:
+		int dcPos;
 		//Pointer to dc motor object
 		DcMotor * _dcMotor;
 		//Pointer to servo wrapper instance

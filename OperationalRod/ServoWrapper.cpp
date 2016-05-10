@@ -15,38 +15,40 @@
 
 #include "ServoWrapper.h"
 
-ServoWrapper::ServoWrapper()
-{
-	_servo.attach(SERVO_PIN);
-}
-
+//set servo to desired state
+//0 - NA, 1 - Kick, 2 - Defence, 3 - Rise
 void ServoWrapper::setState(int state)
 {
+	if (!_servo.attached()) _servo.attach(SERVO_PIN);
 	if (_servoState != state)
 	{
-		if (state == 1)
+		Serial.print(F("Setting servo state: "));
+		switch (state)
 		{
-			_servo.write(30);
+		case KICK:
+			_servo.write(KICK_DEGREES);
 			_servoState = state;
-		}
-		else if (state == 2)
-		{
-			_servo.write(90);
+			break;
+		case DEFENCE:
+			_servo.write(DEFENCE_DEGREES);
 			_servoState = state;
-		}
-		else if (state == 3)
-		{
-			_servo.write(120);
+			break;
+		case RISE:
+			_servo.write(RISE_DEGREES);
 			_servoState = state;
+			break;
+		default:
+			break;
 		}
 	}
 }
 
-void ServoWrapper::callibrate()
+//calibration method sets servo to defence mode
+void ServoWrapper::calibrate()
 {
-	if (!_isCallibrated)
+	if (!_isCalibrated)
 	{
-		setState(2);
-		_isCallibrated = true;
+		setState(DEFENCE);
+		_isCalibrated = true;
 	}
 }

@@ -19,6 +19,14 @@
 
 #include <Servo.h>
 
+#define NA 0
+#define KICK 1
+#define DEFENCE 2
+#define RISE 3
+#define KICK_DEGREES 30
+#define DEFENCE_DEGREES 110
+#define RISE_DEGREES 140
+
 //Wrapper for servo in foosbot context
 class ServoWrapper
 {
@@ -27,23 +35,24 @@ private:
 	Servo _servo;
 	//current servo state (0 - NA)
 	int _servoState = 0;
-	//is callibration flag
-	bool _isCallibrated;
+	//is calibration flag
+	bool _isCalibrated;
 public:
 	//servo arduino connection pin
 	const int SERVO_PIN = 9;
 
 	//constructor
-	ServoWrapper();
+	ServoWrapper() { }
 	
 	//set servo to desired state
 	//0 - NA, 1 - Kick, 2 - Defence, 3 - Rise
 	void setState(int state);
 
-	//callibration method sets servo to defence mode
-	void callibrate();
+	//calibration method sets servo to defence mode
+	void calibrate();
 
-	void setCalibratedFalse() { _isCallibrated = false; }
+	//set current calibration status
+	void setCalibrated(bool isCalibrated) { _isCalibrated = isCalibrated; }
 };
 
 #endif

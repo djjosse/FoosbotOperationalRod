@@ -16,57 +16,54 @@
 #include "InputHandler.h"
 #define INPUT_SIZE 10
 
+//constructor
 InputHandler::InputHandler(DcMotor * dcMotor, ServoWrapper * servoWrapper)
 {
 	_dcMotor = dcMotor;
 	_servoWrapper = servoWrapper;
 }
 
+//handles input form serial port
+//must be called each arduino loop iteration
+//returns flag if reset requested - true
 bool InputHandler::handleInput()
 {
 	if (Serial.available() > 0)
 	{
-		int dc = -1;
-		int servo = 0;
-		// Get next command from Serial (add 1 for final 0)
-		char input[INPUT_SIZE + 1];
-		byte size = Serial.readBytes(input, INPUT_SIZE);
-		input[size] = 0;
-		Serial.println(input);
-		if (input[0] == 'i')
+		int servoB = 0;
+		int dcB = 0;
+		int input = Serial.read();
+		switch (input)
 		{
-			//requested reset
-			return true;
-		}
-		else
-		{
-			int count = 0;
-			char* command = strtok(input, "&");
-			while (command != 0)
-			{
-				if (count == 0)
-				{
-					dc = atoi(command);
+			case 255:
+				Serial.print(F("Initializing..."));
+				return true;
+			default:
+				//get command from serial as 8 bits (assuming a 8 bit int)
+				int bits[8];
+				for (int i = 0; i < 8; ++i) 
+				{  
+					bits[i] = input & (1 << i) ? 1 : 0;
 				}
-				if (count == 1)
+				//get servo command bits 0 and 1
+				servoB = bits[0] + bits[1] * 2;
+				//get DC position between MIN_CODED_DC_POSITION (1) and MAX_CODED_DC_POSITION (62)
+				for (int i = 7; i >= 2; i--)
 				{
-					servo = atoi(command);
+					dcB <<= 1;
+					dcB += bits[i];
 				}
-				command = strtok(0, "&");
-				count++;
-			}
-			if (dc != -1)
-			{
-				Serial.println(dc);
+
+				//calculate requested position in ticks
+				float m = _dcMotor->getDecodeFactor();
+				int dc = m*(float)(dcB);
+				
+				//set requested position
 				_dcMotor->setPosition(dc);
-			}
-			if (servo != 0)
-			{
-				Serial.println(servo);
-				_servoWrapper->setState(servo);
-			}
+				_servoWrapper->setState(servoB);
+
+				break;
 		}
+		return false;
 	}
-	//reset not requested
-	return false;
 }

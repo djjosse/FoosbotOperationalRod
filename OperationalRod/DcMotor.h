@@ -19,18 +19,23 @@
 
 #include <PID_v1.h>
 
+#define ROD_LENGTH 2600
+#define MAX_CODED_DC_POSITION 62
+#define MIN_CODED_DC_POSITION 1
+
 //Class represents instance of DCMotor with encoder and stopper buttons
 class DcMotor
 {
 	private:
 		//current dc position on axe
-		volatile int _currentPosition;
+		//volatile int _currentPosition;
+		volatile int * _curPosPtr;
 		//pointer to PID instance
 		PID * _pid;
-		//flag for rod callibration
-		bool _isCallibrated;
+		//flag for rod calibration
+		bool _isCalibrated;
 		//axe start stopper
-		int _startPosition = 0;
+		//int _startPosition = 0;
 		//last received position input stored
 		int _lastReceivedPosition = 0;
 		//pid Input parameter - current position
@@ -54,6 +59,9 @@ class DcMotor
 		//end stopper button pin
 		const int END_BUTTON = 7;
 
+		//Buffer for move in ticks
+		const int BUFFER = 100;
+
 		//pid kP parameter
 		const double KP = 1;
 		//pid kI parameter
@@ -63,17 +71,11 @@ class DcMotor
 		//allowed position error in ticks
 		const int PID_ERROR = 10;
 
+		//decoding factor to convert bits to ticks
+		float _decodingFactor;
+
 		//constructor
-		DcMotor();
-
-		//encoder A handler method
-		void encoderA();
-
-		//encoder B handler method
-		void encoderB();
-
-		//current location inline getter
-		int getCurrentDcPosition() { return _currentPosition; }
+		DcMotor(volatile int * currentPosition);
 
 		//set dc direction to forward
 		void setForward();
@@ -92,9 +94,15 @@ class DcMotor
 		//must be called every loop
 		void verifyPosition();
 
-		//callibrattion detects 0 position of a rod, must be called once at the begging of a programm
-		//sets callibration flag as true, second call will be ignored
-		void callibrate();
+		//calibrattion detects 0 position of a rod, must be called once at the begging of a programm
+		//sets calibration flag as true, second call will be ignored
+		void calibrate();
+
+		//set current calibration status
+		void setCalibrated(bool isCalibrated) { _isCalibrated = isCalibrated; }
+
+		//get decoding factor used to convert decoded dc value to ticks
+		float getDecodeFactor() { return _decodingFactor; }
 };
 
 #endif

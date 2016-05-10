@@ -16,165 +16,117 @@
 #include "DcMotor.h"
 #include "Arduino.h"
 
-DcMotor::DcMotor()
+//constructor
+DcMotor::DcMotor(volatile int * currentPosition)
 {
+	//Calculate decode factor
+	_decodingFactor = (float)ROD_LENGTH / (float)(MAX_CODED_DC_POSITION - MIN_CODED_DC_POSITION);
+
 	//initialize current position and desired position for PID
-	_currentPosition = 0;
+	_curPosPtr = currentPosition;
 	_setpoint = 0;
 
 	//create pid instance and configure it
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
-	_pid->SetSampleTime(1);
+	_pid->SetSampleTime(20);
+	_pid->SetOutputLimits(-100, 100);
 	
-	//set callibration flag to false
-	_isCallibrated = false;
+	//set calibration flag to false
+	_isCalibrated = false;
 }
 
-void DcMotor::encoderA(){
-
-	//look for a low-to-high on channel A
-	if (digitalRead(ENCODER_A) == HIGH) 
-	{
-		// check channel B to see which way encoder is turning
-		if (digitalRead(ENCODER_B) == LOW)
-		{
-			//CW
-			_currentPosition--;
-		}
-		else {
-			// CCW
-			_currentPosition++;
-			
-		}
-	}
-
-	else   // must be a high-to-low edge on channel A                                       
-	{
-		// check channel B to see which way encoder is turning  
-		if (digitalRead(ENCODER_B) == HIGH) {
-			// CW
-			_currentPosition--;
-		}
-		else {
-			// CCW
-			_currentPosition++;
-		}
-	}
-}
-
-void DcMotor::encoderB()
-{
-	//look for a low-to-high on channel B
-	if (digitalRead(ENCODER_B) == HIGH) {
-
-		// check channel A to see which way encoder is turning
-		if (digitalRead(ENCODER_A) == HIGH) {
-			//moving clock wise
-			_currentPosition--;
-		}
-		else {
-			//moving contra clock wise
-			_currentPosition++;
-		}
-	}
-	//look for a high-to-low on channel B
-	else
-	{
-		// check channel B to see which way encoder is turning  
-		if (digitalRead(ENCODER_A) == LOW) {
-			//moving clock wise
-			_currentPosition--;
-		}
-		else {
-			//moving contra clock wise
-			_currentPosition++;
-		}
-	}
-}
-
+//set dc direction to forward
 void DcMotor::setForward()
 {
 	digitalWrite(DC_DIRECTION, HIGH);
 }
 
+//set dc direction to 
 void DcMotor::setBackward()
 {
 	digitalWrite(DC_DIRECTION, LOW);
 }
 
+//set dc speed (255 max, 0 stop)
 void DcMotor::setSpeed(double speed)
 {
 	analogWrite(DC_POWER, speed);
 }
 
+//set dc position - moves back or forward according to PID and current position,
+//must be called on new input
 void DcMotor::setPosition(int newPosition)
 {
-	_lastReceivedPosition = newPosition;
-	_setpoint = newPosition + _startPosition;
-	_input = _currentPosition;
-
-	_pid->Compute();
-
-	if (_setpoint > _currentPosition + PID_ERROR)
+	if (newPosition <= ROD_LENGTH - BUFFER && newPosition >= 0)//BUFFER)
 	{
-		if (digitalRead(END_BUTTON) != LOW)
+		if (digitalRead(END_BUTTON) == LOW) (*_curPosPtr) = ROD_LENGTH;
+		if (digitalRead(START_BUTTON) == LOW) (*_curPosPtr) = 0;
+
+		_lastReceivedPosition = newPosition;
+		_setpoint = newPosition;
+		_input = *_curPosPtr;
+
+		_pid->Compute();
+
+		if (_setpoint > (*_curPosPtr) + PID_ERROR)
 		{
-			setForward();
-			setSpeed(_output);
+			if (digitalRead(END_BUTTON) != LOW)
+			{
+				setForward();
+				setSpeed(_output);
+			}
+			else
+			{
+				setSpeed(0);
+			}
 		}
+		else if (_setpoint < (*_curPosPtr) - PID_ERROR)
+		{
+			if (digitalRead(START_BUTTON) != LOW)
+			{
+				setBackward();
+				setSpeed(_output*(-1));
+			}
+			else
+			{
+				setSpeed(0);
+			}
+		}
+		//Position reached
 		else
 		{
 			setSpeed(0);
 		}
 	}
-	else if (_setpoint  < _currentPosition - PID_ERROR)
-	{
-		if (digitalRead(START_BUTTON) != LOW)
-		{
-			setBackward();
-			setSpeed(100);
-		}
-		else
-		{
-			setSpeed(0);
-		}
-	}
-	//Position reached
 	else
 	{
-		setSpeed(0);
+		Serial.println(F("Received coordinate is out of range."));
 	}
-	//Serial.println(getCurrentDcPosition());
 }
 
+//verifies current position is as desired - uses setPosition() to fix,
+//must be called every loop
 void DcMotor::verifyPosition()
 {
 	setPosition(_lastReceivedPosition);
 }
 
-void DcMotor::callibrate()
+//calibrattion detects 0 position of a rod, must be called once at the begging of a programm
+//sets calibration flag as true, second call will be ignored
+void DcMotor::calibrate()
 {
-	if (!_isCallibrated)
+	if (!_isCalibrated)
 	{
 		//move to start pin (0)
 		while (digitalRead(START_BUTTON) != LOW)
 		{
 			setBackward();
 			setSpeed(75);
-			Serial.println(getCurrentDcPosition());
 		}
 		setSpeed(0);
-		_startPosition = _currentPosition;
-		_setpoint = _startPosition;
-
-		/*Serial.print(getCurrentDcPosition());
-		Serial.print(" ");
-		Serial.print(_startPosition);
-		Serial.print(" ");
-		Serial.println(_setpoint);*/
-
-		
-		_isCallibrated = true;
+		*_curPosPtr = 0;
+		_setpoint = *_curPosPtr;
+		_isCalibrated = true;
 	}
 }
