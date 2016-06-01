@@ -60,14 +60,14 @@ class DcMotor
 		const int END_BUTTON = 7;
 
 		//Buffer for move in ticks
-		const int BUFFER = 100;
+		const int BUFFER = 80;
 
 		//pid kP parameter
-		const double KP = 1;
+		const double KP = -1; //1
 		//pid kI parameter
-		const double KI = 0.05;
+		const double KI = 0.05; // 0.05;
 		//pid kD parameter
-		const double KD = 0.25;
+		const double KD = 0.25;	//0.25
 		//allowed position error in ticks
 		const int PID_ERROR = 10;
 

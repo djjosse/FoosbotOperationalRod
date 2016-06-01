@@ -59,6 +59,7 @@ bool InputHandler::handleInput()
 				int dc = m*(float)(dcB);
 				
 				//set requested position
+				Serial.println(dc);
 				_dcMotor->setPosition(dc);
 				_servoWrapper->setState(servoB);
 
