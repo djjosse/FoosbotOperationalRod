@@ -23,6 +23,7 @@ void ServoWrapper::setState(int state)
 	if (_servoState != state)
 	{
 		Serial.print(F("Setting servo state: "));
+		Serial.println(state);
 		switch (state)
 		{
 		case KICK:

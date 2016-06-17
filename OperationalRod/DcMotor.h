@@ -19,7 +19,6 @@
 
 #include <PID_v1.h>
 
-#define ROD_LENGTH 2600
 #define MAX_CODED_DC_POSITION 62
 #define MIN_CODED_DC_POSITION 1
 
@@ -45,6 +44,9 @@ class DcMotor
 		//pid Setpoint parameter - desired position
 		double _setpoint;
 
+		const int ROD_LENGTH;
+		const bool ROD_REVERSED;
+		const int INIT_SPEED;
 	public:
 		//encoder A arduino pin
 		const int ENCODER_A = 2;
@@ -60,22 +62,19 @@ class DcMotor
 		const int END_BUTTON = 7;
 
 		//Buffer for move in ticks
-		const int BUFFER = 80;
+		const int BUFFER;
 
-		//pid kP parameter
-		const double KP = -1; //1
-		//pid kI parameter
-		const double KI = 0.05; // 0.05;
-		//pid kD parameter
-		const double KD = 0.25;	//0.25
+		//pid parameters
+		const double KP, KI, KD;
 		//allowed position error in ticks
-		const int PID_ERROR = 10;
+		const int PID_ERROR = 0;
 
 		//decoding factor to convert bits to ticks
 		float _decodingFactor;
 
 		//constructor
-		DcMotor(volatile int * currentPosition);
+		DcMotor(volatile int * currentPosition, int rodLength, bool isReversed,
+			int calibraionSpeed, double kp, double ki, double kd, int buffer);
 
 		//set dc direction to forward
 		void setForward();

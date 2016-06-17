@@ -17,7 +17,10 @@
 #include "Arduino.h"
 
 //constructor
-DcMotor::DcMotor(volatile int * currentPosition)
+DcMotor::DcMotor(volatile int * currentPosition, int rodLength, bool isReversed, 
+	int calibraionSpeed, double kp, double ki, double kd, int buffer)
+	: ROD_LENGTH(rodLength), ROD_REVERSED(isReversed), INIT_SPEED(calibraionSpeed),
+		KP(kp), KI(ki), KD(kd), BUFFER(buffer)
 {
 	//Calculate decode factor
 	_decodingFactor = (float)ROD_LENGTH / (float)(MAX_CODED_DC_POSITION - MIN_CODED_DC_POSITION);
@@ -29,8 +32,8 @@ DcMotor::DcMotor(volatile int * currentPosition)
 	//create pid instance and configure it
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
-	_pid->SetSampleTime(20);
-	_pid->SetOutputLimits(-100, 100);
+	_pid->SetSampleTime(10);
+	_pid->SetOutputLimits(-150, 150);
 
 	//set calibration flag to false
 	_isCalibrated = false;
@@ -39,13 +42,19 @@ DcMotor::DcMotor(volatile int * currentPosition)
 //set dc direction to forward
 void DcMotor::setForward()
 {
-	digitalWrite(DC_DIRECTION, HIGH);
+	if (ROD_REVERSED)
+		digitalWrite(DC_DIRECTION, LOW);
+	else
+		digitalWrite(DC_DIRECTION, HIGH);
 }
 
 //set dc direction to 
 void DcMotor::setBackward()
 {
-	digitalWrite(DC_DIRECTION, LOW);
+	if (ROD_REVERSED)
+		digitalWrite(DC_DIRECTION, HIGH);
+	else
+		digitalWrite(DC_DIRECTION, LOW);
 }
 
 //set dc speed (255 max, 0 stop)
@@ -122,7 +131,7 @@ void DcMotor::calibrate()
 		while (digitalRead(START_BUTTON) != LOW)
 		{
 			setBackward();
-			setSpeed(75);
+			setSpeed(INIT_SPEED);
 		}
 		setSpeed(0);
 		*_curPosPtr = 0;

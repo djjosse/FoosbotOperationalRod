@@ -23,14 +23,16 @@
 #define KICK 1
 #define DEFENCE 2
 #define RISE 3
-#define KICK_DEGREES 30
-#define DEFENCE_DEGREES 110
-#define RISE_DEGREES 140
+
 
 //Wrapper for servo in foosbot context
 class ServoWrapper
 {
 private:
+	const int KICK_DEGREES;// 30
+	const int DEFENCE_DEGREES;// 110
+	const int RISE_DEGREES; // 140
+
 	//servo object instance
 	Servo _servo;
 	//current servo state (0 - NA)
@@ -42,7 +44,8 @@ public:
 	const int SERVO_PIN = 9;
 
 	//constructor
-	ServoWrapper() { }
+	ServoWrapper(int kick, int defence, int rise) : 
+		KICK_DEGREES(kick), DEFENCE_DEGREES(defence), RISE_DEGREES(rise) {}
 	
 	//set servo to desired state
 	//0 - NA, 1 - Kick, 2 - Defence, 3 - Rise

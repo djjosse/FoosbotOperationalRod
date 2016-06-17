@@ -8,90 +8,100 @@
 // **																				   **
 // **************************************************************************************
 
+#include <TimerOne.h>
 #include <Servo.h>
 #include <PID_v1.h>
 #include "ServoWrapper.h"
 #include "InputHandler.h"
 #include "DcMotor.h";
 
+//Serial connection baud-rate
 #define BAUD_RATE 115200
 
+//Rod Types
+#define GOAL_KEEPER_ROD 1
+#define DEFENCE_ROD 2
+
+//Rod Possible Directions
+#define ROD_DIRECTION_DIRECT 0
+#define ROD_DIRECTION_REVERSED 1
+
+/*
+*
+*********** MAKE SURE TO CHOOSE THE RIGHT ROD!*****************
+*
+*/
+#define CURRENT_ROD DEFENCE_ROD
+
+#if CURRENT_ROD == GOAL_KEEPER_ROD
+const int CURRENT_ROD_LENGTH = 620;
+const int ROD_DIRECTION = ROD_DIRECTION_DIRECT;
+const int CALIBRATION_SPEED = 125;
+const double KP = 2.23;
+const double KI = 2.45;
+const double KD = 0.68;
+const int BUFFER = 20;
+const int KICK_D = 30;
+const int DEFENCE_D = 110;
+const int RISE_D = 140;
+const int _encoderState[4][4] = {
+	{ 0, 1, -1, 0 },
+	{ -1, 0, 0, 1 },
+	{ 1, 0, 0, -1 },
+	{ 0, -1, 1, 0 }
+};
+#elif CURRENT_ROD == DEFENCE_ROD
+const int CURRENT_ROD_LENGTH = 6056;
+const int ROD_DIRECTION = ROD_DIRECTION_REVERSED;
+const int CALIBRATION_SPEED = 100;
+const double KP = 2.23;
+const double KI = 2.45;
+const double KD = 0.68;
+const int BUFFER = 40;
+const int KICK_D = 20;
+const int DEFENCE_D = 110;
+const int RISE_D = 160;
+const int _encoderState[4][4] = {
+	{ 0, -1, 1, 0 },
+	{ 1, 0, 0, -1 },
+	{ -1, 0, 0, 1 },
+	{ 0, 1, -1, 0 }
+};
+#endif
+
+//Current dc position of encoder
 volatile int _dcPosition;
 
 //Pointer to DC Motor object instance
-DcMotor _dcMotor(&_dcPosition);
+DcMotor _dcMotor(&_dcPosition, CURRENT_ROD_LENGTH, ROD_DIRECTION, CALIBRATION_SPEED, KP, KI, KD, BUFFER);
 
 //Pointer to Servo object instance
-ServoWrapper _servoWrapper;
+ServoWrapper _servoWrapper(KICK_D, DEFENCE_D, RISE_D);
 
 //Pointer to input handler instance
 InputHandler _inputHandler(&_dcMotor, &_servoWrapper);
 
-void initI();
+//Is rod initialized
 bool _isInitialized;
 
 //Encoder A interrupt handler function
-void handleEncoderA(){
-
-	//look for a low-to-high on channel A
-	if (digitalRead(_dcMotor.ENCODER_A) == HIGH)
-	{
-		// check channel B to see which way encoder is turning
-		if (digitalRead(_dcMotor.ENCODER_B) == LOW)
-		{
-			//CW
-			_dcPosition--;
-		}
-		else {
-			// CCW
-			_dcPosition++;
-
-		}
-	}
-
-	else   // must be a high-to-low edge on channel A                                       
-	{
-		// check channel B to see which way encoder is turning  
-		if (digitalRead(_dcMotor.ENCODER_B) == HIGH) {
-			// CW
-			_dcPosition--;
-		}
-		else {
-			// CCW
-			_dcPosition++;
-		}
-	}
+void handleEncoderA()
+{
+	int currentA = digitalRead(_dcMotor.ENCODER_A);
+	int currentB = digitalRead(_dcMotor.ENCODER_B);
+	int a = ((1 - currentA) << 1) + currentA;
+	int b = (currentB << 1) + currentB;
+	_dcPosition += _encoderState[a][b];
 }
 
 //Encoder B interrupt handler function
 void handleEncoderB()
 {
-	//look for a low-to-high on channel B
-	if (digitalRead(_dcMotor.ENCODER_B) == HIGH) {
-
-		// check channel A to see which way encoder is turning
-		if (digitalRead(_dcMotor.ENCODER_A) == HIGH) {
-			//moving clock wise
-			_dcPosition--;
-		}
-		else {
-			//moving contra clock wise
-			_dcPosition++;
-		}
-	}
-	//look for a high-to-low on channel B
-	else
-	{
-		// check channel B to see which way encoder is turning  
-		if (digitalRead(_dcMotor.ENCODER_A) == LOW) {
-			//moving clock wise
-			_dcPosition--;
-		}
-		else {
-			//moving contra clock wise
-			_dcPosition++;
-		}
-	}
+	int currentA = digitalRead(_dcMotor.ENCODER_A);
+	int currentB = digitalRead(_dcMotor.ENCODER_B);
+	int a = (currentA << 1) + currentA;
+	int b = ((1 - currentB) << 1) + currentB;
+	_dcPosition += _encoderState[a][b];
 }
 
 //Arduino Setup Function
@@ -121,9 +131,9 @@ void initialize()
 	_isInitialized = true;
 }
 
+int counter= 0;
 //Arduino loop function
 void loop() {
-
 	if (!_isInitialized)
 	{
 		Serial.println("Need initialization!");
