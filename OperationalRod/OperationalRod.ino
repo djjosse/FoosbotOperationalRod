@@ -37,9 +37,9 @@
 const int CURRENT_ROD_LENGTH = 620;
 const int ROD_DIRECTION = ROD_DIRECTION_DIRECT;
 const int CALIBRATION_SPEED = 125;
-const double KP = 2.23;
-const double KI = 2.45;
-const double KD = 0.68;
+const double KP = 7;
+const double KI = 0;
+const double KD = 0;
 const int BUFFER = 20;
 const int KICK_D = 30;
 const int DEFENCE_D = 110;
@@ -57,10 +57,10 @@ const int CALIBRATION_SPEED = 100;
 const double KP = 2.23;
 const double KI = 2.45;
 const double KD = 0.68;
-const int BUFFER = 40;
+const int BUFFER = 20;
 const int KICK_D = 20;
 const int DEFENCE_D = 110;
-const int RISE_D = 160;
+const int RISE_D = 170;
 const int _encoderState[4][4] = {
 	{ 0, -1, 1, 0 },
 	{ 1, 0, 0, -1 },

@@ -33,7 +33,7 @@ DcMotor::DcMotor(volatile int * currentPosition, int rodLength, bool isReversed,
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
 	_pid->SetSampleTime(10);
-	_pid->SetOutputLimits(-150, 150);
+	_pid->SetOutputLimits(-180, 180);
 
 	//set calibration flag to false
 	_isCalibrated = false;
@@ -67,7 +67,11 @@ void DcMotor::setSpeed(double speed)
 //must be called on new input
 void DcMotor::setPosition(int newPosition)
 {
-	if (newPosition <= ROD_LENGTH - BUFFER && newPosition >= 0)//BUFFER)
+	if (newPosition >= 0 && newPosition <= BUFFER) 
+		newPosition = BUFFER;
+	if (newPosition >= ROD_LENGTH - BUFFER && newPosition <= ROD_LENGTH)
+		newPosition = ROD_LENGTH - BUFFER;
+	if (newPosition <= ROD_LENGTH - BUFFER && newPosition >= BUFFER)
 	{
 		if (digitalRead(END_BUTTON) == LOW) (*_curPosPtr) = ROD_LENGTH;
 		if (digitalRead(START_BUTTON) == LOW) (*_curPosPtr) = 0;
