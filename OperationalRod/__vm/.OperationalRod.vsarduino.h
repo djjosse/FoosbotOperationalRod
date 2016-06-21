@@ -68,6 +68,7 @@ extern "C" void __cxa_pure_virtual() {;}
 #include <..\OperationalRod\DcMotor.h>
 #include <..\OperationalRod\InputHandler.cpp>
 #include <..\OperationalRod\InputHandler.h>
+#include <..\OperationalRod\ResponseCodes.h>
 #include <..\OperationalRod\ServoWrapper.cpp>
 #include <..\OperationalRod\ServoWrapper.h>
 #endif

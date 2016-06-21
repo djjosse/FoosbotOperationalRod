@@ -14,6 +14,9 @@
 */
 
 #include "ServoWrapper.h"
+#include "ResponseCodes.h"
+
+#define WAIT_AFTER_KICK 500
 
 //set servo to desired state
 //0 - NA, 1 - Kick, 2 - Defence, 3 - Rise
@@ -22,24 +25,31 @@ void ServoWrapper::setState(int state)
 	if (!_servo.attached()) _servo.attach(SERVO_PIN);
 	if (_servoState != state)
 	{
-		Serial.print(F("Setting servo state: "));
-		Serial.println(state);
-		switch (state)
+		//Wait after last received command and ignore new commands
+		//this is made in order to stop burining servos
+		if (millis() - _lastActionTime >= WAIT_AFTER_KICK)
 		{
-		case KICK:
-			_servo.write(KICK_DEGREES);
-			_servoState = state;
-			break;
-		case DEFENCE:
-			_servo.write(DEFENCE_DEGREES);
-			_servoState = state;
-			break;
-		case RISE:
-			_servo.write(RISE_DEGREES);
-			_servoState = state;
-			break;
-		default:
-			break;
+			_lastActionTime = millis();
+			switch (state)
+			{
+			case KICK:
+				Serial.write((char)ArduinoCodes::NEW_SERVO_STATE_KICK);
+				_servo.write(KICK_DEGREES);
+				_servoState = state;
+				break;
+			case DEFENCE:
+				Serial.write((char)ArduinoCodes::NEW_SERVO_STATE_DEFENCE);
+				_servo.write(DEFENCE_DEGREES);
+				_servoState = state;
+				break;
+			case RISE:
+				Serial.write((char)ArduinoCodes::NEW_SERVO_STATE_RISE);
+				_servo.write(RISE_DEGREES);
+				_servoState = state;
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }

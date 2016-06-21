@@ -15,6 +15,7 @@
 
 #include "DcMotor.h"
 #include "Arduino.h"
+#include "ResponseCodes.h"
 
 //constructor
 DcMotor::DcMotor(volatile int * currentPosition, int rodLength, bool isReversed, 
@@ -65,7 +66,7 @@ void DcMotor::setSpeed(double speed)
 
 //set dc position - moves back or forward according to PID and current position,
 //must be called on new input
-void DcMotor::setPosition(int newPosition)
+void DcMotor::setPosition(int newPosition, bool verbose)
 {
 	if (newPosition >= 0 && newPosition <= BUFFER) 
 		newPosition = BUFFER;
@@ -73,6 +74,11 @@ void DcMotor::setPosition(int newPosition)
 		newPosition = ROD_LENGTH - BUFFER;
 	if (newPosition <= ROD_LENGTH - BUFFER && newPosition >= BUFFER)
 	{
+		if (verbose)
+		{
+			Serial.write((char)ArduinoCodes::DC_RECEIVED_OK);
+		}
+
 		if (digitalRead(END_BUTTON) == LOW) (*_curPosPtr) = ROD_LENGTH;
 		if (digitalRead(START_BUTTON) == LOW) (*_curPosPtr) = 0;
 
@@ -114,7 +120,7 @@ void DcMotor::setPosition(int newPosition)
 	}
 	else
 	{
-		Serial.println(F("Received coordinate is out of range."));
+		if (verbose) Serial.write((char)ArduinoCodes::DC_RANGE_INVALID);
 	}
 }
 
@@ -122,7 +128,7 @@ void DcMotor::setPosition(int newPosition)
 //must be called every loop
 void DcMotor::verifyPosition()
 {
-	setPosition(_lastReceivedPosition);
+	setPosition(_lastReceivedPosition, false);
 }
 
 //calibrattion detects 0 position of a rod, must be called once at the begging of a programm
@@ -141,5 +147,6 @@ void DcMotor::calibrate()
 		*_curPosPtr = 0;
 		_setpoint = *_curPosPtr;
 		_isCalibrated = true;
+		Serial.write((char)ArduinoCodes::DC_CALIBRATED);
 	}
 }

@@ -84,7 +84,7 @@ InputHandler _inputHandler(&_dcMotor, &_servoWrapper);
 //Is rod initialized
 bool _isInitialized;
 
-//Encoder A interrupt handler function
+//	Encoder A interrupt handler function
 void handleEncoderA()
 {
 	int currentA = digitalRead(_dcMotor.ENCODER_A);
@@ -94,7 +94,7 @@ void handleEncoderA()
 	_dcPosition += _encoderState[a][b];
 }
 
-//Encoder B interrupt handler function
+//	Encoder B interrupt handler function
 void handleEncoderB()
 {
 	int currentA = digitalRead(_dcMotor.ENCODER_A);
@@ -104,21 +104,10 @@ void handleEncoderB()
 	_dcPosition += _encoderState[a][b];
 }
 
-//Arduino Setup Function
+//	Arduino Setup Function
 void setup() {
 	//start serial communication
 	Serial.begin(BAUD_RATE);
-	_isInitialized = false;
-}
-
-void initialize()
-{
-	_servoWrapper.setCalibrated(false);
-	_servoWrapper.calibrate();
-
-	//attached stopper buttons for rod
-	pinMode(_dcMotor.START_BUTTON, INPUT);
-	pinMode(_dcMotor.END_BUTTON, INPUT);
 
 	//attach interrupts for encoders (0 - pin 2, 1 - pin 3)
 	pinMode(_dcMotor.ENCODER_A, INPUT);
@@ -127,38 +116,50 @@ void initialize()
 	attachInterrupt(0, handleEncoderA, CHANGE);
 	attachInterrupt(1, handleEncoderB, CHANGE);
 
-	_dcMotor.setCalibrated(false);
-	_isInitialized = true;
+	//attached stopper buttons for rod
+	pinMode(_dcMotor.START_BUTTON, INPUT);
+	pinMode(_dcMotor.END_BUTTON, INPUT);
+
+	_isInitialized = false;
 }
 
-int counter= 0;
-//Arduino loop function
-void loop() {
+//	Rod Initialization method
+void initialize()
+{
+	Serial.write((char)ArduinoCodes::INIT_STARTED);
+
+	_servoWrapper.setCalibrated(false);
+	_servoWrapper.calibrate();
+
+	_dcMotor.setCalibrated(false);
+	_isInitialized = true;
+
+	_dcMotor.calibrate();
+
+	Serial.write((char)ArduinoCodes::INIT_FINISHED);
+}
+
+//	Arduino Main
+void loop() 
+{
+	//Step 1. Handle input.
+	_inputHandler.handle();
+
+	//Step 2. Initialize if requested and set flag false
+	if (_inputHandler.initializationRequestReceived())
+	{
+		initialize();
+	}
+
+	//Step 3. Request initialization if not initialized
 	if (!_isInitialized)
 	{
-		Serial.println("Need initialization!");
-		if (_inputHandler.handleInput())
-		{
-			initialize();
-		}
+		_inputHandler.sendInitializationRequest();
 	}
-	else
-	{
-		//calibrate rod - only if not calibrated yet
-		_dcMotor.calibrate();
 
-		//handle input from serial port
-		if (_inputHandler.handleInput())
-		{
-			initialize();
-		}
-		else
-		{
-			if (_isInitialized)
-			{
-				//verify DC motor location and fix
-				_dcMotor.verifyPosition();
-			}
-		}
+	//Step 4. Verify and fix DC position if initialized
+	if (_isInitialized)
+	{
+		_dcMotor.verifyPosition();
 	}
 }

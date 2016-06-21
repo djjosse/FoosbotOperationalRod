@@ -87,7 +87,7 @@ class DcMotor
 
 		//set dc position - moves back or forward according to PID and current position,
 		//must be called on new input
-		void setPosition(int newPosition);
+		void setPosition(int newPosition, bool verbose);
 
 		//verifies current position is as desired - uses setPosition() to fix,
 		//must be called every loop

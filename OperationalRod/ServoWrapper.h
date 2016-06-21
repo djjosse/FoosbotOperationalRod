@@ -39,6 +39,9 @@ private:
 	int _servoState = 0;
 	//is calibration flag
 	bool _isCalibrated;
+
+	//last action time-stamp
+	unsigned long _lastActionTime = 0;
 public:
 	//servo arduino connection pin
 	const int SERVO_PIN = 9;
