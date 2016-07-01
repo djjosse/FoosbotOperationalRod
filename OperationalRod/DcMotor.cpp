@@ -34,7 +34,7 @@ DcMotor::DcMotor(volatile int * currentPosition, int rodLength, bool isReversed,
 	_pid = new PID(&_input, &_output, &_setpoint, KP, KI, KD, DIRECT);
 	_pid->SetMode(AUTOMATIC);
 	_pid->SetSampleTime(10);
-	_pid->SetOutputLimits(-180, 180);
+	_pid->SetOutputLimits(-200, 200);
 
 	//set calibration flag to false
 	_isCalibrated = false;

@@ -8,7 +8,6 @@
 // **																				   **
 // **************************************************************************************
 
-#include <TimerOne.h>
 #include <Servo.h>
 #include <PID_v1.h>
 #include "ServoWrapper.h"
@@ -40,10 +39,10 @@ const int CALIBRATION_SPEED = 125;
 const double KP = 7;
 const double KI = 0;
 const double KD = 0;
-const int BUFFER = 20;
-const int KICK_D = 30;
-const int DEFENCE_D = 110;
-const int RISE_D = 140;
+const int BUFFER = 5;
+const int KICK_D = 10;
+const int DEFENCE_D = 120;
+const int RISE_D = 170;
 const int _encoderState[4][4] = {
 	{ 0, 1, -1, 0 },
 	{ -1, 0, 0, 1 },
@@ -58,9 +57,9 @@ const double KP = 2.23;
 const double KI = 2.45;
 const double KD = 0.68;
 const int BUFFER = 20;
-const int KICK_D = 20;
-const int DEFENCE_D = 110;
-const int RISE_D = 170;
+const int KICK_D = 10;
+const int DEFENCE_D = 90;
+const int RISE_D = 160;
 const int _encoderState[4][4] = {
 	{ 0, -1, 1, 0 },
 	{ 1, 0, 0, -1 },

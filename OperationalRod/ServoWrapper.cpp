@@ -16,7 +16,7 @@
 #include "ServoWrapper.h"
 #include "ResponseCodes.h"
 
-#define WAIT_AFTER_KICK 500
+#define WAIT_SERVO 150
 
 //set servo to desired state
 //0 - NA, 1 - Kick, 2 - Defence, 3 - Rise
@@ -27,7 +27,7 @@ void ServoWrapper::setState(int state)
 	{
 		//Wait after last received command and ignore new commands
 		//this is made in order to stop burining servos
-		if (millis() - _lastActionTime >= WAIT_AFTER_KICK)
+		if (millis() - _lastActionTime >= WAIT_SERVO)
 		{
 			_lastActionTime = millis();
 			switch (state)
